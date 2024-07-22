@@ -1,8 +1,9 @@
 import numpy as np
 from track_visualizer import converters, tools, data
+from track_visualizer.track import Track
 
-class Decoder():
-    data = data.Data()
+class Decoder(Track):
+    #data = data.Data()
     density = 0
     
     def __init__(self, gps_file, extension=None):
@@ -12,7 +13,8 @@ class Decoder():
             extension = gps_file.split('.')[-1]
 
         self.extension = extension
-        self.to_be_masked = False
+        #self.to_be_masked = False
+        #self.distance_shift = 0
 
         decoders = {'fit':self.read_fit_file, 'gpx':self.read_gpx_file }
         supported_extensions = decoders.keys()
@@ -23,6 +25,9 @@ class Decoder():
         self.decoder = decoders[extension]
 
         self._data = self.decode()
+
+    # def add_to_distance(shift):
+    #     self.distance_shift = shift
         
 
     def read_gpx_file(self, path):
@@ -39,14 +44,35 @@ class Decoder():
                 for segment in track.segments:
                     for point in segment.points:
                         dc = {}
+                        position = np.array([point.latitude, point.longitude])
+                        
                         if i == 0 and point.latitude is None:
                             continue
                         if point.time is not None:
                             time = point.time.time()
                             dc['timestamp'] = time
-                            
-                        #data.append({'id':i, 'timestamp':time, 'position':np.array([point.latitude, point.longitude])})
-                        dc.update({'id':i, 'position':np.array([point.latitude, point.longitude])})
+
+                        if point.elevation is not None:
+                            ele = point.elevation
+                            dc['altitude'] = ele
+
+                        if hasattr(point, 'distance'):
+                            distance = point.distance
+                            dc['distance'] = distance
+                        else:
+                            if len(data) > 0:
+                                last_position = data[-1]['position']
+                                last_distance = data[-1]['distance']
+                            else:
+                                last_position = position
+                                last_distance = 0
+                                
+                            distance = tools.calculate_distance(position, last_position)
+                            dc['distance'] = distance + last_distance
+                        
+                        if type(dc['distance']) in (int, float):
+                            dc['distance'] += self.distance_shift
+                        dc.update({'id':i, 'position':position})
                         data.append(dc)
                         i += 1
         return data
@@ -82,6 +108,9 @@ class Decoder():
                                 out[field_name] = value
                             else:
                                 out[field_name] = None
+
+                        if type(out['distance']) in (int, float):
+                            out['distance'] += self.distance_shift
     
                     if len(out) > 2:
                         data.append(out)
@@ -95,20 +124,21 @@ class Decoder():
         return output
 
     
-    def mask(self, initial_id=None, final_id=None):
-        self.to_be_masked = True
-        self.mask_ids = [initial_id, final_id]
+    # def mask(self, initial_id=None, final_id=None):
+    #     self.to_be_masked = True
+    #     self.mask_ids = [initial_id, final_id]
 
     
-    def unmask(self):
-        self.to_be_masked = False
-        self.mask_ids = [None, None]
+    # def unmask(self):
+    #     self.to_be_masked = False
+    #     self.mask_ids = [None, None]
 
     
-    def masked(self, data):
-        from_id, to_id = self.mask_ids
-        return data[from_id:to_id]
-        
+    # def masked(self, data):
+    #     from_id, to_id = self.mask_ids
+    #     return data[from_id:to_id]
+
+    
     # ## deprecated
     # def interpolate_data_linearly(self, input):
     #     from copy import deepcopy
@@ -194,11 +224,11 @@ class Decoder():
     #     return enriched
 
     
-    ## later should be put into a class parent to Interpolator and Decoder
-    def get_range_suggestions(self, **kwargs):
-        return tools.get_range_suggestions(self, **kwargs)
+    # ## later should be put into a class parent to Interpolator and Decoder
+    # def get_range_suggestions(self, **kwargs):
+    #     return tools.get_range_suggestions(self, **kwargs)
 
     
-    ## later should be put into a class parent to Interpolator and Decoder
-    def plot_interval_preview(self, low, high, width=200):
-        tools.plot_interval_preview(self, low, high, width=width)
+    # ## later should be put into a class parent to Interpolator and Decoder
+    # def plot_interval_preview(self, low, high, width=200):
+    #     tools.plot_interval_preview(self, low, high, width=width)

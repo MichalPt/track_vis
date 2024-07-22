@@ -2,8 +2,9 @@ import numpy as np
 from track_visualizer import tools
 from functools import partial
 from scipy.interpolate import interp1d, Akima1DInterpolator
+from track_visualizer.track import Track
 
-class Interpolator():
+class Interpolator(Track):
     def __init__(self, decoder, density=4, method='akima', kind='cubic', **kwargs):
         ## density ... number of points to be inserted
         ## order of differential to be interpolated, default is 2 (=acceleration)
@@ -73,7 +74,7 @@ class Interpolator():
         
         if evaluate_time:
             spl_timestamp = self.method(id_timestamp_data, timestamp_data)
-            interpolated_timestamp_data = [tools.number_to_time(t) for t in spl_timestamp(interpolated_id_data)]
+            interpolated_timestamp_data = [tools.number_to_time(np.floor(t)) for t in spl_timestamp(interpolated_id_data)]
 
             value_dict['timestamp'] = interpolated_timestamp_data
         
@@ -105,14 +106,14 @@ class Interpolator():
         return new_data
 
     
-    ## later should be put into a class parent to Interpolator and Decoder
-    def get_range_suggestions(self, **kwargs):
-        return tools.get_range_suggestions(self, **kwargs)
+    # ## later should be put into a class parent to Interpolator and Decoder
+    # def get_range_suggestions(self, **kwargs):
+    #     return tools.get_range_suggestions(self, **kwargs)
 
     
-    ## later should be put into a class parent to Interpolator and Decoder
-    def plot_interval_preview(self, low, high, width=200):
-        tools.plot_interval_preview(self, low, high, width=width)
+    # ## later should be put into a class parent to Interpolator and Decoder
+    # def plot_interval_preview(self, low, high, width=200):
+    #     tools.plot_interval_preview(self, low, high, width=width)
 
 
 

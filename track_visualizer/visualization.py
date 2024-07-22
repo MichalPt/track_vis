@@ -1,6 +1,6 @@
 import os
 from PIL import Image, ImageDraw, ImageFont
-from track_visualizer import converters, tools, ranging, elevation
+from track_visualizer import converters, tools, ranging, elevation, track
 from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
@@ -92,6 +92,13 @@ class Visualizer():
         ranges = ranging.Range(*ranges)
         ranges * (self.index_density + 1)
 
+        if issubclass(type(underlay), track.Track):
+            underlay_data = [line['position'] for line in underlay.data]
+        elif type(underlay) is list:
+            underlay_data = underlay
+        else:
+            underlay_data = []
+
         fps = video_settings['fps'] * (self.index_density + 1)
         
         all_pdxpdy = None
@@ -134,8 +141,8 @@ class Visualizer():
                 rx, ry = converters.deg2pixcoord(*coords, zoom)
                 im1 = super_tile1.crop(tools.get_crop_coords(rx, ry))
                 
-                if len(underlay) > 0:
-                    under_locs = np.array([np.array(converters.degdiff2pixcoord(*ulocs, zoom)) for ulocs in underlay])
+                if len(underlay_data) > 0:
+                    under_locs = np.array([np.array(converters.degdiff2pixcoord(*ulocs, zoom)) for ulocs in underlay_data])
                     
                     under_locs_rel = np.array([512, 512]) - np.array(converters.degdiff2pixcoord(*coords, zoom)) + under_locs
                     u_locs = [tuple(xy) for xy in under_locs_rel]
@@ -258,7 +265,7 @@ class Visualizer():
     
     def render_elevation_frames(self, save_videos=True, njobs=12, verbose=0,\
                                 figsize=(1700,600), xaxis_step=50000, yaxis_step=200, \
-                                breaks=[], tests={}, stage_ranges={}, stage_ranges_overhang=500):
+                                breaks=[], tests={}, stage_ranges={}):
         from joblib import Parallel, delayed
         from tqdm import tqdm
         

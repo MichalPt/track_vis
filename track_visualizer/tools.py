@@ -140,3 +140,51 @@ def save_points_as_svg(points, save_path):
     ax.set_axis_off()
     ax.set_aspect('equal')
     plt.savefig(save_path)
+
+
+def calculate_distance(pos1, pos2):
+    from math import sin, cos, sqrt, atan2, radians
+
+    R = 6378000
+    
+    lat1, lon1 = [radians(aa) for aa in pos1] 
+    lat2, lon2 = [radians(bb) for bb in pos2]
+    
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    
+    distance = R * c
+    
+    return abs(distance)
+
+
+def insert_track(acceptor, donor, insert_range=(0,1), value_key='distance'):
+    acc_data = acceptor.data
+    don_data = donor.data
+    assert value_key in acc_data[0].keys() and value_key in don_data[0].keys()
+    
+    insert_from_index = np.abs(np.array([line[value_key] for line in acc_data]) - insert_range[0]).argmin()
+    insert_to_index = np.abs(np.array([line[value_key] for line in acc_data]) - insert_range[1]).argmin()
+
+    initial_don_id = acc_data[insert_from_index - 1]['id']
+    final_don_id = acc_data[insert_to_index]['id']
+    initial_p1_id = don_data[-1]['id']
+
+    print(initial_don_id, insert_from_index, initial_p1_id, insert_to_index)
+
+    acc_data_0 = acc_data[:insert_from_index]
+    acc_data_1 = acc_data[insert_to_index:]
+
+    for line in don_data:
+        line['id'] += initial_don_id
+
+    for line in acc_data_1:
+        line['id'] += initial_don_id - final_don_id + initial_p1_id 
+
+    acc_data_0.extend(don_data)
+    acc_data_0.extend(acc_data_1)
+    
+    return acc_data_0

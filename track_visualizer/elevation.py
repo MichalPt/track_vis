@@ -70,7 +70,9 @@ def get_elevation_frame(index, all_indices, all_dist, all_elevation, \
                             - bottom_gap - bottom_axis_gap
     convert_from_y = lambda y: - (y - height + bottom_gap + bottom_axis_gap) * (max(all_elevation - min(all_elevation))) / (height - top_gap - bottom_gap - bottom_axis_gap)\
                             + min(all_elevation)
+    
     min_y_w_gap = convert_from_y(height - bottom_gap)
+    
     for i in _y[_y > min_y_w_gap]:
         marker_x =  left_gap
         marker_y = convert_to_y(i)
@@ -79,7 +81,6 @@ def get_elevation_frame(index, all_indices, all_dist, all_elevation, \
 
     draw.text((left_gap + marker_length, top_gap), 'M', font=font_labels, fill=axis_color, anchor='lt')
     draw.text((width-right_gap + marker_length, height - bottom_gap + marker_length*1.5), 'kM', font=font_labels, fill=axis_color, anchor='lt')
-    
         
     gap_line_label = 8
     

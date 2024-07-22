@@ -71,7 +71,7 @@ class Stopwatch():
             img_label = Image.new('RGBA', figsize, (0,0,0,0))
             draw  = ImageDraw.Draw(img_label)
             font = ImageFont.truetype("C:/Users/micha/Documents/Software/fonts/DigitalDismay.ttf", font_size)
-            draw.text((figsize[0] /2, font_size), 'f0-f{:d}'.format(line['section_id']), fill='black', font=font, anchor='mb')
+            draw.text((figsize[0] /2, font_size), 'f0-f{:d}'.format(line['section_id']), fill='white', font=font, anchor='mb')
             img_label.save(os.path.join(test_directory, self.save_label.format(line['test_id'], line['section_id'])))
 
             if save_video:
